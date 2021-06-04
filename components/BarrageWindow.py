@@ -42,7 +42,7 @@ class UiBarrageWindow(QtWidgets.QWidget):
         window.setObjectName("window")
         window.setFixedSize(self.width_, self.height_)
         window.setWindowTitle('弹幕机')
-        window.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.WindowStaysOnTopHint)
+        window.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Tool | QtCore.Qt.WindowStaysOnTopHint)
         window.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)
         pixMap = QtGui.QPixmap()
         pixMap.loadFromData(QtCore.QByteArray.fromBase64(icon.icon))
@@ -77,7 +77,7 @@ class UiBarrageWindow(QtWidgets.QWidget):
         self.avatar.setCursor(QtCore.Qt.PointingHandCursor)
         # Status
         self.status = QtWidgets.QLabel(self.widget)
-        self.status.setGeometry(QtCore.QRect(40, 10, 20, 20))
+        self.status.setGeometry(QtCore.QRect(40, 13, 14, 14))
         self.status.setAlignment(QtCore.Qt.AlignCenter)
         self.status.setObjectName('status')
         self.status.setText('●')
@@ -85,21 +85,21 @@ class UiBarrageWindow(QtWidgets.QWidget):
         # Title
         self.title = DraggableLabel(self.widget)
         self.title.drag_move.connect(self.drag_move)
-        self.title.setGeometry(QtCore.QRect(60, 5, 180, 30))
+        self.title.setGeometry(QtCore.QRect(50, 5, 220, 30))
         self.title.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.title.setObjectName('title')
-        self.title.setStyleSheet("#title{font-size: 16px; color: white;font-weight: bold; padding-left: 5px}")
+        self.title.setStyleSheet("#title{font-size: 12px; color: white;font-weight: bold; padding-left: 5px}")
         # Pop
         self.popular_icon = AvatarLabel(self.widget)
-        self.popular_icon.setGeometry(QtCore.QRect(244, 12, 16, 16))
+        self.popular_icon.setGeometry(QtCore.QRect(274, 12, 16, 16))
         pixMap = QtGui.QPixmap()
         pixMap.loadFromData(QtCore.QByteArray.fromBase64(icon.hot))
         self.popular_icon.setup_image(16, pixMap.scaled(16, 16))
         self.pop = QtWidgets.QLabel(self.widget)
-        self.pop.setGeometry(QtCore.QRect(260, 5, 80, 30))
+        self.pop.setGeometry(QtCore.QRect(290, 5, 50, 30))
         self.pop.setObjectName('pop')
-        self.pop.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        self.pop.setStyleSheet('#pop{font-size:14px; color: white; padding: 5px 0px;font-family: "微软雅黑", sans-serif;}')
+        self.pop.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.pop.setStyleSheet('#pop{font-size:12px; color: white; padding: 5px 0px;font-family: "微软雅黑", sans-serif;}')
         self.pop.setToolTip("人气")
         self.pop.setText("0")
         # On Top
@@ -365,6 +365,9 @@ class UiBarrageWindow(QtWidgets.QWidget):
 
     def init_all_message(self):
         self.live_link = None
+        self.barrage.setFixedSize(380, 0)
+        self.gift.setFixedSize(380, 0)
+        self.join.setFixedSize(380, 0)
         for i in range(self.barrage_layout.count()):
             self.barrage_layout.itemAt(i).widget().deleteLater()
         for i in range(self.gift_layout.count()):
