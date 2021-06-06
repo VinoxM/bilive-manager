@@ -506,7 +506,7 @@ class UiMainWindow(QtWidgets.QWidget):
 
     # 发送弹幕回调
     def call_send_barrage_msg(self, obj):
-        if obj.get('err', None) is not None:
+        if obj.get('err', None):
             self.print_log(obj.get('err'))
 
     # 发送弹幕字数监听
@@ -541,7 +541,7 @@ class UiMainWindow(QtWidgets.QWidget):
     # 获取当前直播区域
     def get_current_area_id(self):
         index = self.area.currentIndex()
-        return self.live_area.keys()[index]
+        return list(self.live_area.keys())[index]
 
     # 设置当前直播区域
     def set_current_area_id(self, area_id):
@@ -567,7 +567,7 @@ class UiMainWindow(QtWidgets.QWidget):
     # 更新用户信息
     def update_user_info(self, user):
         self.print_log('加载用户信息')
-        if user.get("err", "") != "":
+        if user.get("err", None):
             self.print_log(user.get("err"), True)
             return
         self.user_name.setText(user.get("user_name", 'user_name'))
@@ -623,7 +623,7 @@ class UiMainWindow(QtWidgets.QWidget):
 
     # 直播状态更新回调
     def call_live_title(self, flag):
-        if flag.get("err", "") != "":
+        if flag.get("err", None):
             self.print_log(flag.get("err"), True)
             return
         self.print_log("更新直播标题{}".format("成功" if flag else "失败"))
@@ -634,13 +634,13 @@ class UiMainWindow(QtWidgets.QWidget):
 
     # 直播区域更新
     def emit_live_area(self):
-        area_id = self.get_current_area_id()
+        area_id = int(self.get_current_area_id())
         self.print_log("更新直播区域:{}".format(self.area.currentText()))
         self._signal_update_live_area.emit(self.room_id, area_id, self.token, self.cookie)
 
     # 直播状态更新回调
     def call_live_area(self, flag):
-        if flag.get("err", "") != "":
+        if flag.get("err", None):
             self.print_log(flag.get("err"), True)
             return
         self.print_log("更新直播区域{}".format("成功" if flag else "失败"))

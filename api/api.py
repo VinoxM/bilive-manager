@@ -107,7 +107,7 @@ def get_live_rtmp_by_cookie(room_id, cookie):
 
 
 def update_live_title(room_id, title, token, cookie):
-    flag = False
+    info = {'err': None}
     if room_id != 0 and token != '' and cookie != '' and title != '':
         res = request.post(
             url='https://api.live.bilibili.com/room/v1/Room/update',
@@ -120,13 +120,13 @@ def update_live_title(room_id, title, token, cookie):
             headers={'cookie': cookie})
         if res.status_code == 200:
             result = json.loads(res.text)
-            if result['code'] == 0:
-                flag = True
-    return flag
+            if result['code'] != 0:
+                info['err'] = result['message']
+    return info
 
 
 def update_live_area(room_id, area_id, token, cookie):
-    flag = False
+    info = {'err': None}
     if room_id != 0 and token != '' and cookie != '':
         res = request.post(
             url='https://api.live.bilibili.com/room/v1/Room/update',
@@ -139,13 +139,13 @@ def update_live_area(room_id, area_id, token, cookie):
             headers={'cookie': cookie})
         if res.status_code == 200:
             result = json.loads(res.text)
-            if result['code'] == 0:
-                flag = True
-    return flag
+            if result['code'] != 0:
+                info['err'] = result['message']
+    return info
 
 
 def update_live_status(room_id, status, area_id, token, cookie):
-    flag = False
+    info = {'err': None}
     if room_id != 0 and area_id != 0 and token != '' and cookie != '':
         is_live = status == 1
         res = request.post(
@@ -159,9 +159,9 @@ def update_live_status(room_id, status, area_id, token, cookie):
             }, headers={'cookie': cookie})
         if res.status_code == 200:
             result = json.loads(res.text)
-            if result['code'] == 0:
-                flag = True
-    return flag
+            if result['code'] != 0:
+                info['err'] = result['message']
+    return info
 
 
 def send_bili_barrage(message, room_id, token, cookie):
