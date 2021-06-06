@@ -656,7 +656,7 @@ class UiMainWindow(QtWidgets.QWidget):
 
     # 直播状态更新回调
     def call_live_status(self, flag):
-        if type(flag) != bool and flag.get("err", "") != "":
+        if type(flag) != bool and flag.get("err", None):
             self.print_log(flag.get("err"), True)
             return
         self.update_live_status(abs(self.live_status - 1) if flag else self.live_status)
