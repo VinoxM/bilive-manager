@@ -11,6 +11,7 @@ from sockets.SokectHandler import encode, decoder
 handlers = {
     'INTERACT_WORD': 'handle_interact',
     'DANMU_MSG:4:0:2:2:2:0': 'handle_dan_mu',
+    'DANMU_MSG': 'handle_dan_mu',
     'SEND_GIFT': 'handle_send_gift',
     'COMBO_SEND': 'handle_combo_send',
     'WELCOME': 'handle_welcome'

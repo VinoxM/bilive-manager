@@ -21,6 +21,7 @@ from components.AvatarLabel import AvatarLabel
 
 class UiBarrageWindow(QtWidgets.QWidget):
     _signal_get_user_detail = QtCore.pyqtSignal(int)
+    _signal_update_barrage_visible = QtCore.pyqtSignal(int)
 
     def __init__(self):
         super(UiBarrageWindow, self).__init__()
@@ -41,12 +42,12 @@ class UiBarrageWindow(QtWidgets.QWidget):
         self.window = window
         window.setObjectName("window")
         window.setFixedSize(self.width_, self.height_)
-        window.setWindowTitle('弹幕机')
         window.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Tool | QtCore.Qt.WindowStaysOnTopHint)
         window.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)
         pixMap = QtGui.QPixmap()
-        pixMap.loadFromData(QtCore.QByteArray.fromBase64(icon.icon))
+        pixMap.loadFromData(QtCore.QByteArray.fromBase64(icon.disconnected))
         window.setWindowIcon(QtGui.QIcon(pixMap))
+        window.setWindowTitle('弹幕姬 [未连接]')
 
         # Window Frame
         self.widget = QtWidgets.QWidget(window)
@@ -198,12 +199,20 @@ class UiBarrageWindow(QtWidgets.QWidget):
 
         QtCore.QMetaObject.connectSlotsByName(window)
 
+    def toggle_barrage_status(self, status):
+        pixMap = QtGui.QPixmap()
+        pixMap.loadFromData(QtCore.QByteArray.fromBase64(icon.connected if status == 1 else icon.disconnected))
+        self.window.setWindowIcon(QtGui.QIcon(pixMap))
+        self.window.setWindowTitle('弹幕姬 [已连接]' if status == 1 else '弹幕姬 [未连接]')
+
     def _toggle(self):
         if self.window.isVisible():
             self.window.close()
+            self._signal_update_barrage_visible.emit(0)
         else:
             self.window.show()
             self.window.activateWindow()
+            self._signal_update_barrage_visible.emit(1)
 
     def drag_move(self, x, y):
         desktop = QtWidgets.QApplication.desktop()
@@ -339,6 +348,7 @@ class UiBarrageWindow(QtWidgets.QWidget):
         if not self.thread.isRunning():
             self.thread.start()
         self._signal_get_user_detail.emit(uid)
+        self.toggle_barrage_status(1)
 
     def update_heartbeat(self, num_):
         str_ = str(num_)
@@ -381,6 +391,7 @@ class UiBarrageWindow(QtWidgets.QWidget):
 
     def ws_closed(self):
         self.status.setStyleSheet("color: red")
+        self.toggle_barrage_status(0)
 
     def toggle_top(self):
         pixMap = QtGui.QPixmap()

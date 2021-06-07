@@ -241,3 +241,26 @@ def get_user_detail(uid):
             else:
                 user_info['err'] = result['message']
     return user_info
+
+
+def get_last_ten_message(room_id):
+    info = {'err': None, 'message': []}
+    if room_id != 0:
+        res = request.get(
+            url='http://api.live.bilibili.com/ajax/msg',
+            params={
+                'roomid': room_id
+            })
+        if res.status_code == 200:
+            result = json.loads(res.text)
+            if result['code'] == 0:
+                data = result['data']
+                for elem in data['room']:
+                    info['message'].append({
+                        'uid': elem.get('uid', 0),
+                        'uname': elem.get('nickname', 'unkown_user'),
+                        'msg': elem.get('text', '')
+                    })
+            else:
+                info['err'] = result['message']
+    return info

@@ -49,6 +49,7 @@ class UiMainWindow(QtWidgets.QWidget):
     _signal_update_live_area = QtCore.pyqtSignal(int, int, str, str)
     _signal_update_live_status = QtCore.pyqtSignal(int, int, int, str, str)
     _signal_get_real_room_id = QtCore.pyqtSignal(str, str)
+    _signal_get_last_barrage = QtCore.pyqtSignal(str)
 
     _signal_bili_ws_connect = QtCore.pyqtSignal(str)
     _signal_bili_ws_disconnect = QtCore.pyqtSignal()
@@ -63,6 +64,9 @@ class UiMainWindow(QtWidgets.QWidget):
     _signal_open_setting_window = QtCore.pyqtSignal(str, str, str)
     _signal_toggle_barrage_window = QtCore.pyqtSignal()
 
+    _signal_update_sys_tray_live_status = QtCore.pyqtSignal(int)
+    _signal_update_sys_tray_ws_connect = QtCore.pyqtSignal(int)
+
     def __init__(self):
         super(UiMainWindow, self).__init__()
 
@@ -76,6 +80,7 @@ class UiMainWindow(QtWidgets.QWidget):
         self.log_msg = []
         self.logs = None
         self.ws_status = 0
+        self.minimized = 1
 
         # init config.ini
         cf = RawConfigParser()
@@ -152,6 +157,11 @@ class UiMainWindow(QtWidgets.QWidget):
         self.thread_bili_ws.pop.connect(self.call_bili_ws_pop)
         self.thread_bili_ws.gift.connect(self.call_bili_ws_gift)
         self.thread_bili_ws.receive.connect(self.call_bili_ws_receive)
+        # get last ten barrage
+        self.thread_get_last_barrage = RunThread('get_last_ten_message')
+        self.thread_get_last_barrage.moveToThread(self.thread)
+        self._signal_get_last_barrage.connect(self.thread_get_last_barrage.run)
+        self.thread_get_last_barrage.signal.connect(self.call_get_last_barrage)
 
     def setupUi(self, main_window):
         """ main window """
@@ -160,8 +170,9 @@ class UiMainWindow(QtWidgets.QWidget):
         main_window.setEnabled(True)
         main_window.setFixedSize(500, 400)
         pixMap = QtGui.QPixmap()
-        pixMap.loadFromData(QtCore.QByteArray.fromBase64(icon.icon))
+        pixMap.loadFromData(QtCore.QByteArray.fromBase64(icon.icon_stop))
         main_window.setWindowIcon(QtGui.QIcon(pixMap))
+        self.main_window = main_window
 
         """ user info """
         self.centralwidget = QtWidgets.QWidget(main_window)
@@ -407,7 +418,7 @@ class UiMainWindow(QtWidgets.QWidget):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Bili Live"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Bilive Manager [Live Off]"))
         self.user_name.setText(_translate("MainWindow", "UserName"))
         self.level.setText(_translate("MainWindow", "Level ?"))
         self.level.setStyleSheet(Style.level_style_(0))
@@ -433,6 +444,13 @@ class UiMainWindow(QtWidgets.QWidget):
         self.send.setText(_translate("MainWindow", "发送"))
         self.label.setText(_translate("MainWindow", "日志:"))
 
+    # 切换窗口标题和图标
+    def toggle_window_status(self, status):
+        pixMap = QtGui.QPixmap()
+        pixMap.loadFromData(QtCore.QByteArray.fromBase64(icon.icon if status == 1 else icon.icon_stop))
+        self.main_window.setWindowIcon(QtGui.QIcon(pixMap))
+        self.main_window.setWindowTitle('Bilive Manager [直播中]' if status == 1 else 'Bilive Manager [未开播]')
+
     # 切换ws状态
     def toggle_ws_status(self):
         if self.room.text() == '':
@@ -454,7 +472,9 @@ class UiMainWindow(QtWidgets.QWidget):
             if room_id != 0:
                 self.print_log('已获取 {} 的真实直播间: {}({})'.format(self.room.text(), room_info.get('uname', ''), room_id))
                 self.room.setText(str(room_id))
+                self._signal_get_last_barrage.emit(str(room_id))
                 self._signal_bili_ws_connect.emit(str(room_id))
+                self._signal_update_sys_tray_ws_connect.emit(1)
                 self._signal_bili_ws_update.emit(room_info)
                 self.message.setDisabled(False)
                 self.send.setDisabled(False)
@@ -470,6 +490,7 @@ class UiMainWindow(QtWidgets.QWidget):
         self._signal_bili_ws_disconnect.emit()
         self.message.setDisabled(True)
         self.send.setDisabled(True)
+        self._signal_update_sys_tray_ws_connect.emit(0)
 
     # ws信息回调 -- 开启
     def call_bili_ws_open(self, msg):
@@ -509,6 +530,14 @@ class UiMainWindow(QtWidgets.QWidget):
         if obj.get('err', None):
             self.print_log(obj.get('err'))
 
+    def call_get_last_barrage(self, obj):
+        if obj.get('err', None):
+            self.print_log(obj.get('err'))
+        else:
+            message = obj.get('message', [])
+            for elem in message:
+                self._signal_bili_ws_receive.emit(elem)
+
     # 发送弹幕字数监听
     def message_count_watch(self, count):
         self.message_count.setText("{}/30".format(count))
@@ -541,7 +570,7 @@ class UiMainWindow(QtWidgets.QWidget):
     # 获取当前直播区域
     def get_current_area_id(self):
         index = self.area.currentIndex()
-        return list(self.live_area.keys())[index]
+        return int(list(self.live_area.keys())[index])
 
     # 设置当前直播区域
     def set_current_area_id(self, area_id):
@@ -621,7 +650,7 @@ class UiMainWindow(QtWidgets.QWidget):
             self.print_log("更新直播标题:{}".format(title))
             self._signal_update_live_title.emit(self.room_id, title, self.token, self.cookie)
 
-    # 直播状态更新回调
+    # 直播标题更新回调
     def call_live_title(self, flag):
         if flag.get("err", None):
             self.print_log(flag.get("err"), True)
@@ -638,7 +667,7 @@ class UiMainWindow(QtWidgets.QWidget):
         self.print_log("更新直播区域:{}".format(self.area.currentText()))
         self._signal_update_live_area.emit(self.room_id, area_id, self.token, self.cookie)
 
-    # 直播状态更新回调
+    # 直播区域更新回调
     def call_live_area(self, flag):
         if flag.get("err", None):
             self.print_log(flag.get("err"), True)
@@ -686,11 +715,14 @@ class UiMainWindow(QtWidgets.QWidget):
             self.rtmp_widget.hide()
             self.code_widget.hide()
             self.live_space_widget.show()
+
         else:
             self.rtmp_widget.show()
             self.code_widget.show()
             self.live_space_widget.hide()
             self._signal_get_live_rtmp.emit(self.room_id, self.cookie)
+        self.toggle_window_status(status)
+        self._signal_update_sys_tray_live_status.emit(self.live_status)
 
     # 更新直播码
     def update_live_rtmp(self, live_rtmp):
@@ -768,3 +800,20 @@ class UiMainWindow(QtWidgets.QWidget):
         with open("config.ini", "w+") as f:
             cf.write(f)
         self.refresh_info()
+
+    def toggle_window_visible(self):
+        if self.main_window.isVisible():
+            self.main_window.hide()
+        else:
+            self.show_main_window()
+
+    def show_main_window(self):
+        self.main_window.showNormal()
+        self.main_window.activateWindow()
+
+    def toggle_minimized(self, status):
+        self.minimized = status
+
+    def toggle_main_minimized(self):
+        if self.minimized == 1:
+            self.main_window.hide()
