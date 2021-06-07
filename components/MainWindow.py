@@ -418,7 +418,7 @@ class UiMainWindow(QtWidgets.QWidget):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Bilive Manager [Live Off]"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Bilive Manager [未开播]"))
         self.user_name.setText(_translate("MainWindow", "UserName"))
         self.level.setText(_translate("MainWindow", "Level ?"))
         self.level.setStyleSheet(Style.level_style_(0))
