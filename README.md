@@ -16,4 +16,4 @@ B站大佬开发的弹幕姬历史弹幕并不能长时间显示,稍不注意弹
 
 ##### 软件截图:
 
-![image](http://github.com/vinoxm/bilive-manager/raw/master/images/nongshalie.jpg)
+![image](https://github.com/VinoxM/bilive-manager/blob/master/snipaste/main_window.png)
