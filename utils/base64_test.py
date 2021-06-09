@@ -1,6 +1,6 @@
 import base64
 
-open_icon = open("../assets/connected.png", "rb")
+open_icon = open("../assets/test1.png", "rb")
 b64str = base64.b64encode(open_icon.read())
 open_icon.close()
 write_data = "connected = %s" % b64str
