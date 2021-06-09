@@ -14,7 +14,12 @@ handlers = {
     'DANMU_MSG': 'handle_dan_mu',
     'SEND_GIFT': 'handle_send_gift',
     'COMBO_SEND': 'handle_combo_send',
-    'WELCOME': 'handle_welcome'
+    'WELCOME': 'handle_welcome',
+    'SUPER_CHAT_MESSAGE': 'handle_super_chat',
+    'SUPER_CHAT_MESSAGE_JPN': 'handle_super_chat',
+    'ENTRY_EFFECT': 'handle_entry_effect',
+    'LIVE': 'handle_live',
+    'PREPARING': 'handle_preparing'
 }
 
 
@@ -26,6 +31,8 @@ class SocketWidget(QtCore.QObject):
     pop = QtCore.pyqtSignal(int)
     gift = QtCore.pyqtSignal(object)
     receive = QtCore.pyqtSignal(object)
+    live = QtCore.pyqtSignal()
+    preparing = QtCore.pyqtSignal()
 
     def __init__(self):
         super(SocketWidget, self).__init__()
@@ -64,11 +71,12 @@ class SocketWidget(QtCore.QObject):
             if type(body) == dict:
                 body = [body]
             for elem in body:
-                # print(elem)
                 name_ = handlers.get(elem['cmd'], None)
                 if name_:
                     method = getattr(self, name_)
                     method(elem)
+                else:
+                    print(elem)
         elif result['op'] == 8:
             # self.join.emit('加入直播间:{}'.format(self.room))
             pass
@@ -142,6 +150,20 @@ class SocketWidget(QtCore.QObject):
             'uname': data['uname']
         }
         self.join.emit(obj)
+
+    # 开播
+    def handle_live(self, elem):
+        self.live.emit()
+
+    # 下播
+    def handle_preparing(self, elem):
+        self.preparing.emit()
+
+    def handle_super_chat(self, elem):
+        print(elem)
+
+    def handle_entry_effect(self, elem):
+        print(elem)
 
 
 class StoppableThread(threading.Thread):

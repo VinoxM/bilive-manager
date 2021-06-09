@@ -17,6 +17,7 @@ from components.DraggableWidget import DraggableWidget, DraggableLabel
 import icon
 from components.ClickableLabel import ClickableLabel
 from components.AvatarLabel import AvatarLabel
+from components.ScrollArea import ScrollArea
 
 
 class UiBarrageWindow(QtWidgets.QWidget):
@@ -40,6 +41,7 @@ class UiBarrageWindow(QtWidgets.QWidget):
 
     def setupUi(self, window):
         self.window = window
+        self.window.closed.connect(self._toggle)
         window.setObjectName("window")
         window.setFixedSize(self.width_, self.height_)
         window.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Tool | QtCore.Qt.WindowStaysOnTopHint)
@@ -97,7 +99,7 @@ class UiBarrageWindow(QtWidgets.QWidget):
         pixMap.loadFromData(QtCore.QByteArray.fromBase64(icon.hot))
         self.popular_icon.setup_image(16, pixMap.scaled(16, 16))
         self.pop = QtWidgets.QLabel(self.widget)
-        self.pop.setGeometry(QtCore.QRect(290, 5, 50, 30))
+        self.pop.setGeometry(QtCore.QRect(285, 5, 60, 30))
         self.pop.setObjectName('pop')
         self.pop.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.pop.setStyleSheet('#pop{font-size:12px; color: white; padding: 5px 0px;font-family: "微软雅黑", sans-serif;}')
@@ -112,25 +114,13 @@ class UiBarrageWindow(QtWidgets.QWidget):
         self.top.clicked.connect(self.toggle_top)
         self.top.setCursor(QtCore.Qt.PointingHandCursor)
 
-        self.barrage_area = QtWidgets.QScrollArea(window)
+        self.barrage_area = ScrollArea(window)  # QtWidgets.QScrollArea(window)
+        self.barrage_area.setProperties(item_max_width=380, max_height=680, max_count=100, auto_remove=True,
+                                        item_style_sheet='color: white;font-size:12px;'
+                                                         'font-family: "微软雅黑", sans-serif;'
+                                                         'line-height: 20px;padding: 3px 0px;')
         self.barrage_area.setGeometry(QtCore.QRect(0, 40, 400, 700))
-        self.barrage_area.setObjectName("scrollArea")
-        self.barrage_area.setWidgetResizable(True)
-
-        self.barrage = QtWidgets.QWidget(window)
-        self.barrage.setObjectName("barrage")
-        self.barrage.setStyleSheet("#barrage{padding: 3px 2px 3px 2px;}")
-        self.barrage.setFixedSize(394, 10)
-        self.barrage.setAttribute(QtCore.Qt.WA_TranslucentBackground)
-
-        self.barrage_layout = QtWidgets.QVBoxLayout()
-        self.barrage_layout.setAlignment(QtCore.Qt.AlignTop)
-        self.barrage_layout.setSpacing(5)
-        self.barrage.setLayout(self.barrage_layout)
-
-        self.barrage_area.setWidget(self.barrage)
         self.barrage_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        # self.barrage_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.barrage_area.setStyleSheet(Style.scroll_bar_style('border: 0px;background-color: rgba(0,0,0,0.5);'))
 
         self.split_ = QtWidgets.QWidget(window)
@@ -158,53 +148,35 @@ class UiBarrageWindow(QtWidgets.QWidget):
         self.join_label.setAttribute(QtCore.Qt.WA_TranslucentBackground)
         self.join_label.setAlignment(QtCore.Qt.AlignCenter)
 
-        self.gift = QtWidgets.QWidget()
-        self.gift.setObjectName("barrage")
-        self.gift.setStyleSheet("#barrage{padding: 3px 2px 3px 2px;}")
-        self.gift.setAttribute(QtCore.Qt.WA_TranslucentBackground)
-
-        self.gift_area = QtWidgets.QScrollArea(window)
-        self.gift_area.setGeometry(QtCore.QRect(0, 760, 400, 140))
-        self.gift_area.setObjectName("scrollArea")
-
-        self.gift_layout = QtWidgets.QVBoxLayout()
-        self.gift_layout.setAlignment(QtCore.Qt.AlignTop)
-        self.gift_layout.setSpacing(5)
-        self.gift.setLayout(self.gift_layout)
-
-        self.gift_area.setWidget(self.gift)
-        self.gift_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        # self.other_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.gift_area = ScrollArea(window)
         self.gift_area.setStyleSheet(Style.scroll_bar_style('border: 0px;background-color: rgba(0,0,0,0.5);'))
+        self.gift_area.setProperties(item_max_width=380, max_height=130, max_count=40, auto_remove=True,
+                                     item_style_sheet='color: white;font-size:12px;'
+                                                      'font-family: "微软雅黑", sans-serif;'
+                                                      'line-height: 20px;padding: 3px 0px;')
+        self.gift_area.setGeometry(QtCore.QRect(0, 760, 400, 140))
+        self.gift_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
-        self.join = QtWidgets.QWidget()
-        self.join.setObjectName("barrage")
-        self.join.setStyleSheet("#barrage{padding: 3px 2px 3px 2px;}")
-        self.join.setAttribute(QtCore.Qt.WA_TranslucentBackground)
-
-        self.join_area = QtWidgets.QScrollArea(window)
-        self.join_area.setGeometry(QtCore.QRect(0, 760, 400, 140))
-        self.join_area.setObjectName("scrollArea")
-
-        self.join_layout = QtWidgets.QVBoxLayout()
-        self.join_layout.setAlignment(QtCore.Qt.AlignTop)
-        self.join_layout.setSpacing(5)
-        self.join.setLayout(self.join_layout)
-
-        self.join_area.setWidget(self.join)
-        self.join_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        # self.other_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.join_area = ScrollArea(window)
         self.join_area.setStyleSheet(Style.scroll_bar_style('border: 0px;background-color: rgba(0,0,0,0.5);'))
+        self.join_area.setProperties(item_max_width=380, max_height=130, max_count=40, auto_remove=True,
+                                     item_style_sheet='color: white;font-size:12px;'
+                                                      'font-family: "微软雅黑", sans-serif;'
+                                                      'line-height: 20px;padding: 3px 0px;')
+        self.join_area.setGeometry(QtCore.QRect(0, 760, 400, 140))
+        self.join_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.join_area.hide()
 
         QtCore.QMetaObject.connectSlotsByName(window)
 
+    # 切换标题和图标
     def toggle_barrage_status(self, status):
         pixMap = QtGui.QPixmap()
         pixMap.loadFromData(QtCore.QByteArray.fromBase64(icon.connected if status == 1 else icon.disconnected))
         self.window.setWindowIcon(QtGui.QIcon(pixMap))
         self.window.setWindowTitle('弹幕姬 [已连接]' if status == 1 else '弹幕姬 [未连接]')
 
+    # 切换显示状态
     def _toggle(self):
         if self.window.isVisible():
             self.window.close()
@@ -214,6 +186,7 @@ class UiBarrageWindow(QtWidgets.QWidget):
             self.window.activateWindow()
             self._signal_update_barrage_visible.emit(1)
 
+    # 拖动
     def drag_move(self, x, y):
         desktop = QtWidgets.QApplication.desktop()
         width = desktop.width()
@@ -228,6 +201,7 @@ class UiBarrageWindow(QtWidgets.QWidget):
             y = height - self.height_
         self.window.move(x, y)
 
+    # 弹幕信息
     def add_barrage(self, dm_info):
         uid = dm_info['uid']
         uname = dm_info['uname']
@@ -235,64 +209,16 @@ class UiBarrageWindow(QtWidgets.QWidget):
         is_host = uid == self.uid
         str_ = '' if not is_host else '<span style="color: white;">主 </span>'
         str_ += '<span style="font-weight: bold;color: #ADBCD9">{}: </span><span style="color:white;">'.format(uname)
-        str_end = '{}<br>'
-        row_height = 24  # 行高
-        row_space = 3  # 行距
-        item_space = 5  # 弹幕间距
-        scroll_bar = self.barrage_area.verticalScrollBar()
-        is_on_bottom = scroll_bar.value() == scroll_bar.maximum()
-        len_uname = len(uname) + 2 if is_host else 0
-        len_ = len(message) + len_uname
-        max_len = 30
-        row_num = math.ceil(len_ / max_len)
-        for i in range(row_num):
-            str_ += str_end.format(message[i * max_len:(i + 1) * max_len - (0 if i != 0 else len_uname)])
-        str_ += '</span>'
-        label = QtWidgets.QLabel()
-        label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-        label.setAlignment(QtCore.Qt.AlignVCenter)
-        label.setText(str_)
-        label.setStyleSheet('font-size:14px;font-family: "微软雅黑", sans-serif;line-height: 20px;')
-        height = row_num * row_height + (row_num - 1) * row_space
-        label.setFixedSize(380, height)
-        label.setAttribute(QtCore.Qt.WA_TranslucentBackground)
-        self.barrage_layout.addWidget(label)
-        if self.barrage_layout.count() > 100:
-            label_ = self.barrage_layout.takeAt(0)
-            height -= label_.widget().size().height() + item_space
-            label_.widget().deleteLater()
-        self.barrage.setFixedSize(380, self.barrage.size().height() + height + item_space)
-        if self.barrage.size().height() > 690:
-            scroll_bar = self.barrage_area.verticalScrollBar()
-            if is_on_bottom:
-                scroll_bar.setValue(scroll_bar.maximum())
+        self.barrage_area.add_item(str_ + message)
 
     def add_join(self, obj):
         uname = obj['uname']
         is_welcome = obj['welcome']
         message = '{} 用户 <span style="font-weight: bold;color: #ADBCD9">{}</span> 进入直播间'.format(
             '' if not is_welcome else '欢迎', uname)
-        scroll_bar = self.join_area.verticalScrollBar()
-        is_on_bottom = scroll_bar.value() == scroll_bar.maximum()
-        label = QtWidgets.QLabel()
-        label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-        label.setAlignment(QtCore.Qt.AlignVCenter)
-        label.setText(message)
-        label.setStyleSheet('color: white;font-size:12px;font-family: "微软雅黑", sans-serif;line-height: 20px;')
-        label.setFixedSize(380, 20)
-        label.setAttribute(QtCore.Qt.WA_TranslucentBackground)
-        self.join_layout.addWidget(label)
-        height = 20 + 4
-        if self.join_layout.count() > 40:
-            label_ = self.join_layout.takeAt(0)
-            height -= label_.widget().size().height() + 4
-            label_.widget().deleteLater()
-        self.join.setFixedSize(380, self.join.size().height() + height)
-        if self.join.size().height() > 130:
-            scroll_bar = self.join_area.verticalScrollBar()
-            if is_on_bottom:
-                scroll_bar.setValue(scroll_bar.maximum())
+        self.join_area.add_item(message)
 
+    # 礼物信息
     def add_gift(self, obj):
         uname = obj['uname']
         action_ = obj['action']
@@ -301,27 +227,9 @@ class UiBarrageWindow(QtWidgets.QWidget):
         message = '<span style="font-weight: bold;color: #ADBCD9">{}</span> ' \
                   '{} 了 {} 个 <span style="font-weight: bold;color: #ADBCD9">' \
                   '{}</span>'.format(uname, action_, num_, gift_name)
-        scroll_bar = self.gift_area.verticalScrollBar()
-        is_on_bottom = scroll_bar.value() == scroll_bar.maximum()
-        label = QtWidgets.QLabel()
-        label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-        label.setAlignment(QtCore.Qt.AlignVCenter)
-        label.setText(message)
-        label.setStyleSheet('color: white;font-size:12px;font-family: "微软雅黑", sans-serif;line-height: 20px;')
-        label.setFixedSize(380, 20)
-        label.setAttribute(QtCore.Qt.WA_TranslucentBackground)
-        self.gift_layout.addWidget(label)
-        height = 20 + 4
-        if self.gift_layout.count() > 40:
-            label_ = self.gift_layout.takeAt(0)
-            height -= label_.widget().size().height() + 4
-            label_.widget().deleteLater()
-        self.gift.setFixedSize(380, self.gift.size().height() + height)
-        if self.gift.size().height() > 130:
-            scroll_bar = self.gift_area.verticalScrollBar()
-            if is_on_bottom:
-                scroll_bar.setValue(scroll_bar.maximum())
+        self.gift_area.add_item(message)
 
+    # 获取用户详情回调
     def call_get_user_detail(self, obj):
         if obj.get('err', '') == '':
             face = obj.get('face', None)
@@ -337,6 +245,7 @@ class UiBarrageWindow(QtWidgets.QWidget):
                                         img_=avatar.scaled(36, 36, transformMode=QtCore.Qt.SmoothTransformation))
             self.avatar.setToolTip(obj.get('uname', ''))
 
+    # 更新直播信息
     def update_live_info(self, obj):
         self.init_all_message()
         title = obj.get('title', '')
@@ -350,6 +259,13 @@ class UiBarrageWindow(QtWidgets.QWidget):
         self._signal_get_user_detail.emit(uid)
         self.toggle_barrage_status(1)
 
+    def live_start(self):
+        self.status.setStyleSheet("color: {}".format("#59A869"))
+
+    def live_stop(self):
+        self.status.setStyleSheet("color: {}".format("#F0F0F0"))
+
+    # 更新直播人气
     def update_heartbeat(self, num_):
         str_ = str(num_)
         if num_ > 10000:
@@ -357,6 +273,7 @@ class UiBarrageWindow(QtWidgets.QWidget):
         self.pop.setText(str_)
         self.pop.setToolTip(str(num_))
 
+    # 显示礼物面板
     def show_gift(self):
         self.gift_label.setText('<span style="color: white">礼物信息</span>')
         self.join_label.setText('<span style="color: #0ebeff"><u>进场信息</u></span>')
@@ -365,6 +282,7 @@ class UiBarrageWindow(QtWidgets.QWidget):
         scroll_bar.setValue(scroll_bar.maximum())
         self.join_area.hide()
 
+    # 显示入场面板
     def show_join(self):
         self.gift_label.setText('<span style="color: #0ebeff"><u>礼物信息</u></span>')
         self.join_label.setText('<span style="color: white">进场信息</span>')
@@ -373,26 +291,24 @@ class UiBarrageWindow(QtWidgets.QWidget):
         scroll_bar = self.join_area.verticalScrollBar()
         scroll_bar.setValue(scroll_bar.maximum())
 
+    # 初始化信息
     def init_all_message(self):
         self.live_link = None
-        self.barrage.setFixedSize(380, 0)
-        self.gift.setFixedSize(380, 0)
-        self.join.setFixedSize(380, 0)
-        for i in range(self.barrage_layout.count()):
-            self.barrage_layout.itemAt(i).widget().deleteLater()
-        for i in range(self.gift_layout.count()):
-            self.gift_layout.itemAt(i).widget().deleteLater()
-        for i in range(self.join_layout.count()):
-            self.join_layout.itemAt(i).widget().deleteLater()
+        self.barrage_area.clear_items()
+        self.gift_area.clear_items()
+        self.join_area.clear_items()
 
+    # 点击头像打开直播间
     def open_url(self):
         if self.live_link:
             webbrowser.open(self.live_link)
 
+    # ws 关闭
     def ws_closed(self):
         self.status.setStyleSheet("color: red")
         self.toggle_barrage_status(0)
 
+    # 切换是否置顶
     def toggle_top(self):
         pixMap = QtGui.QPixmap()
         pixMap.loadFromData(QtCore.QByteArray.fromBase64(icon.on_top if self.on_top else icon.top))
@@ -401,6 +317,6 @@ class UiBarrageWindow(QtWidgets.QWidget):
         if self.on_top:
             self.window.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Tool | QtCore.Qt.WindowStaysOnTopHint)
         else:
-            self.window.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Tool)
+            self.window.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         self.window.show()
         self.window.activateWindow()

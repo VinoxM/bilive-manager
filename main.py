@@ -1,11 +1,12 @@
 # coding=utf-8
-from components.MainWindow import UiMainWindow
-from components.SettingWindow import UiSettingWindow
-from components.BarrageWindow import UiBarrageWindow
-from components.SystemTray import UiSystemTray
+from panel.MainWindow import UiMainWindow
+from panel.SettingWindow import UiSettingWindow
+from panel.BarrageWindow import UiBarrageWindow
+from panel.SystemTray import UiSystemTray
 from components.ChangeableMainWindow import ChangeableMainWindow
+from components.ChangeableWidget import ChangeableWidget
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog, QWidget
+from PyQt5.QtWidgets import QApplication, QDialog, QWidget
 from PyQt5.QtCore import QByteArray
 from PyQt5.QtGui import QIcon, QPixmap
 import icon
@@ -30,7 +31,7 @@ if __name__ == '__main__':
     ui_setting.close_and_refresh.connect(ui_main.call_setting)
 
     """ barrage window """
-    barrage_window = QWidget()
+    barrage_window = ChangeableWidget()
     ui_barrage = UiBarrageWindow()
     ui_barrage.setupUi(barrage_window)
     ui_main._signal_toggle_barrage_window.connect(ui_barrage._toggle)
@@ -40,6 +41,8 @@ if __name__ == '__main__':
     ui_main._signal_bili_ws_update.connect(ui_barrage.update_live_info)
     ui_main._signal_bili_ws_pop.connect(ui_barrage.update_heartbeat)
     ui_main._signal_bili_ws_close.connect(ui_barrage.ws_closed)
+    ui_main._signal_bili_ws_live.connect(ui_barrage.live_start)
+    ui_main._signal_bili_ws_preparing.connect(ui_barrage.live_stop)
 
     """ system tray """
     pixMap = QPixmap()

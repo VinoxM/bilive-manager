@@ -11,6 +11,7 @@
 from components.ClickableLabel import ClickableLabel
 from components.ChangeableTextEdit import ChangeableTextEdit
 from components.AvatarLabel import AvatarLabel
+from components.ScrollArea import ScrollArea
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import webbrowser
@@ -60,6 +61,8 @@ class UiMainWindow(QtWidgets.QWidget):
     _signal_bili_ws_gift = QtCore.pyqtSignal(object)
     _signal_bili_ws_close = QtCore.pyqtSignal()
     _signal_bili_ws_update = QtCore.pyqtSignal(object)
+    _signal_bili_ws_live = QtCore.pyqtSignal()
+    _signal_bili_ws_preparing = QtCore.pyqtSignal()
 
     _signal_open_setting_window = QtCore.pyqtSignal(str, str, str)
     _signal_toggle_barrage_window = QtCore.pyqtSignal()
@@ -81,6 +84,7 @@ class UiMainWindow(QtWidgets.QWidget):
         self.logs = None
         self.ws_status = 0
         self.minimized = 1
+        self.room_info = {'uname': '', 'uid': '', 'room_id': ''}
 
         # init config.ini
         cf = RawConfigParser()
@@ -157,6 +161,8 @@ class UiMainWindow(QtWidgets.QWidget):
         self.thread_bili_ws.pop.connect(self.call_bili_ws_pop)
         self.thread_bili_ws.gift.connect(self.call_bili_ws_gift)
         self.thread_bili_ws.receive.connect(self.call_bili_ws_receive)
+        self.thread_bili_ws.live.connect(self.call_bili_ws_live)
+        self.thread_bili_ws.preparing.connect(self.call_bili_ws_preparing)
         # get last ten barrage
         self.thread_get_last_barrage = RunThread('get_last_ten_message')
         self.thread_get_last_barrage.moveToThread(self.thread)
@@ -395,24 +401,14 @@ class UiMainWindow(QtWidgets.QWidget):
         self.label.setGeometry(QtCore.QRect(0, 0, 250, 24))
         self.label.setStyleSheet('padding: 0px 6px;line-height: 24px;font-family: "微软雅黑", sans-serif;')
         self.label.setObjectName("label")
-        self.scrollArea = QtWidgets.QScrollArea(self.widget_4)
+        self.scrollArea = ScrollArea(self.widget_4)
+        self.scrollArea.setStyleSheet(Style.scroll_bar_style('border: 1px;border-style:solid;border-color: #828790;'))
+        self.scrollArea.setProperties(max_height=362, item_max_width=230, auto_remove=False)
         self.scrollArea.setGeometry(QtCore.QRect(4, 26, 242, 368))
-        self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setObjectName("scrollArea")
-        # logs
-        self.logs = QtWidgets.QLabel()
-        # self.logs.setGeometry(QtCore.QRect(80, 170, 54, 12))
-        self.logs.setObjectName("logs")
-        self.logs.setAlignment(QtCore.Qt.AlignTop)
-        self.logs.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
-        self.logs.setCursor(QtCore.Qt.IBeamCursor)
-        self.logs.setStyleSheet('#logs{padding: 0px 3px 0px 3px;font-family: "微软雅黑", sans-serif;}')
-        self.scrollArea.setWidget(self.logs)
         self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.scrollArea.setStyleSheet(Style.scroll_bar_style('border: 1px;border-style:solid;border-color: #828790;'))
-        main_window.setCentralWidget(self.centralwidget)
 
+        main_window.setCentralWidget(self.centralwidget)
         self.retranslateUi(main_window)
         QtCore.QMetaObject.connectSlotsByName(main_window)
 
@@ -470,6 +466,9 @@ class UiMainWindow(QtWidgets.QWidget):
         if room_info.get('err', '') == '':
             room_id = room_info['real_room_id']
             if room_id != 0:
+                self.room_info['room_id'] = room_id
+                self.room_info['uid'] = room_info.get('uid')
+                self.room_info['uname'] = room_info.get('uname')
                 self.print_log('已获取 {} 的真实直播间: {}({})'.format(self.room.text(), room_info.get('uname', ''), room_id))
                 self.room.setText(str(room_id))
                 self._signal_get_last_barrage.emit(str(room_id))
@@ -524,6 +523,16 @@ class UiMainWindow(QtWidgets.QWidget):
     # ws信息回调 -- 弹幕
     def call_bili_ws_receive(self, obj):
         self._signal_bili_ws_receive.emit(obj)
+
+    # ws信息回调 -- 直播开始
+    def call_bili_ws_live(self):
+        self.print_log('直播已开始:{} ({})'.format(self.room_info['uname'], self.room_info['room_id']))
+        self._signal_bili_ws_live.emit()
+
+    # ws信息回调 -- 直播结束
+    def call_bili_ws_preparing(self):
+        self.print_log('直播已结束:{} ({})'.format(self.room_info['uname'], self.room_info['room_id']))
+        self._signal_bili_ws_preparing.emit()
 
     # 发送弹幕回调
     def call_send_barrage_msg(self, obj):
@@ -752,32 +761,16 @@ class UiMainWindow(QtWidgets.QWidget):
 
     # 打印日志
     def print_log(self, message, is_err=False):
-        str_ = '[Error] {}<br>' if is_err else '[Info] {}<br>'
+        str_ = '[Error] {}' if is_err else '[Info] {}'
         print(message)
-        if self.logs is None:
+        if self.scrollArea is None:
             self.log_msg.append(message)
         else:
-            scroll_bar = self.scrollArea.verticalScrollBar()
-            is_on_bottom = scroll_bar.value() == scroll_bar.maximum()
             if len(self.log_msg) != 0:
                 for elem in self.log_msg:
-                    self.logs.setText(self.logs.text() + str_.format(elem))
+                    self.scrollArea.add_item(str_.format(elem))
                 self.log_msg = []
-            len_ = message.__len__()
-            max_len = 17
-            if len_ >= max_len:
-                for i in range(math.ceil(len_ / max_len)):
-                    if i > 0:
-                        str_ = '{}<br>'
-                    self.logs.setText(self.logs.text() + str_.format(message[i * max_len:(i + 1) * max_len]))
-            else:
-                self.logs.setText(self.logs.text() + str_.format(message))
-            count = len(self.logs.text().split('<br>'))
-            self.logs.setFixedSize(230, (count - 1) * max_len + 6)
-            if (count - 1) * max_len > 362:
-                scroll_bar = self.scrollArea.verticalScrollBar()
-                if is_on_bottom:
-                    scroll_bar.setValue(scroll_bar.maximum())
+            self.scrollArea.add_item(str_.format(message))
 
     # 打开配置窗口
     def open_setting_window(self):
