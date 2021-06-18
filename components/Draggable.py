@@ -5,6 +5,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 class DraggableWidget(QtWidgets.QWidget):
     drag_move = QtCore.pyqtSignal(int, int)
+    drag_end = QtCore.pyqtSignal(int, int)
 
     def __init__(self, *args, **kwargs):
         super(DraggableWidget, self).__init__(*args, **kwargs)
@@ -21,6 +22,9 @@ class DraggableWidget(QtWidgets.QWidget):
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         if QtCore.Qt.LeftButton == event.button():
             self.drag_flag = False
+            x = event.screenPos().x() - self.window_x
+            y = event.screenPos().y() - self.window_y
+            self.drag_end.emit(x, y)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         x = event.screenPos().x() - self.window_x
@@ -30,6 +34,7 @@ class DraggableWidget(QtWidgets.QWidget):
 
 class DraggableLabel(QtWidgets.QLabel):
     drag_move = QtCore.pyqtSignal(int, int)
+    drag_end = QtCore.pyqtSignal(int, int)
 
     def __init__(self, *args, **kwargs):
         super(DraggableLabel, self).__init__(*args, **kwargs)
@@ -46,6 +51,9 @@ class DraggableLabel(QtWidgets.QLabel):
     def mouseReleaseEvent(self, event: QtGui.QMouseEvent) -> None:
         if QtCore.Qt.LeftButton == event.button():
             self.drag_flag = False
+            x = event.screenPos().x() - self.window_x
+            y = event.screenPos().y() - self.window_y
+            self.drag_end.emit(x, y)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         x = event.screenPos().x() - self.window_x

@@ -1,7 +1,6 @@
 # coding=utf-8
 import json
 import zlib
-import numpy as np
 
 
 def read_int(buffer, start, len_):

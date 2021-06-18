@@ -213,6 +213,8 @@ def get_real_room_id(room_id, cookie):
                             live_info['status'] = data['live_status']
                             live_info['uid'] = data['uid']
                             live_info['uname'] = data['uname']
+                            live_info['area_id'] = data['area_id']
+                            live_info['area_name'] = data['area_name']
             else:
                 live_info['err'] = result['message']
     return live_info
@@ -263,4 +265,15 @@ def get_last_ten_message(room_id):
                     })
             else:
                 info['err'] = result['message']
+    return info
+
+
+def get_avatar_content(url):
+    info = {
+        'err': None,
+        'face': None
+    }
+    res = request.get(url)
+    if res.status_code == 200:
+        info['face'] = res.content
     return info

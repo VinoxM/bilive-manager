@@ -9,8 +9,8 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from components.ClickableLabel import ClickableLabel
-from components.DraggableWidget import DraggableWidget
+from components.Clickable import ClickableLabel
+from components.Draggable import DraggableWidget
 import components.Style as Style
 
 

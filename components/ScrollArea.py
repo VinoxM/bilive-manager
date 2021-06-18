@@ -1,4 +1,5 @@
 # coding=utf-8
+import threading
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
@@ -10,28 +11,28 @@ class ScrollArea(QtWidgets.QScrollArea):
         self.is_on_bottom = True
         self.auto_remove = False
         self.max_count = 100
-        self.max_height = 360
-        self.item_max_width = 230
         self.item_style_sheet = '#label{padding: 0px 3px 0px 3px;font-family: "微软雅黑", sans-serif;}'
         widget = ResizeableWidget()
         widget.adjustSize()
         widget.resize.connect(self.scroll_to_bottom)
         widget.setObjectName("widget")
-        widget.setStyleSheet("#widget{padding: 3px 2px 3px 2px;}")
+        widget.setStyleSheet("#widget{padding: 0px;}")
         self.layout = QtWidgets.QGridLayout()
         self.layout.setAlignment(QtCore.Qt.AlignTop)
         self.layout.setSpacing(5)
-        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setContentsMargins(5, 5, 5, 5)
         widget.setLayout(self.layout)
         self.setWidget(widget)
         self.setWidgetResizable(True)
+        self.auto_hide = False
+        self.is_mouse_over = False
+        self.timer = QtCore.QTimer(self)
+        self.timer.timeout.connect(self.hide_and_scroll_bottom)
 
-    def setProperties(self, max_height=360, item_max_width=230, auto_remove=True, max_count=100,
+    def setProperties(self, auto_remove=True, max_count=100,
                       item_style_sheet='#label{padding: 0px 3px 0px 3px;font-family: "微软雅黑", sans-serif;}'):
         self.auto_remove = auto_remove
         self.max_count = max_count
-        self.max_height = max_height
-        self.item_max_width = item_max_width
         self.item_style_sheet = item_style_sheet
 
     def add_item(self, message):
@@ -43,7 +44,7 @@ class ScrollArea(QtWidgets.QScrollArea):
             self.layout.addWidget(message)
         else:
             label = QtWidgets.QLabel()
-            label.setMaximumWidth(self.item_max_width)
+            label.setMaximumWidth(self.width() - 10)
             label.setWordWrap(True)
             label.setText(message)
             label.setCursor(QtCore.Qt.IBeamCursor)
@@ -60,7 +61,28 @@ class ScrollArea(QtWidgets.QScrollArea):
             self.layout.itemAt(i).widget().deleteLater()
 
     def scroll_to_bottom(self):
-        if self.is_on_bottom and self.widget().height() > self.max_height:
+        if self.is_on_bottom and self.widget().height() > self.height():
+            self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
+            if self.auto_hide and not self.is_mouse_over:
+                self.verticalScrollBar().hide()
+
+    def enterEvent(self, event: QtCore.QEvent) -> None:
+        self.is_mouse_over = True
+
+    def wheelEvent(self, event: QtGui.QWheelEvent) -> None:
+        if self.auto_hide:
+            if self.verticalScrollBar().isHidden():
+                self.verticalScrollBar().show()
+        super(ScrollArea, self).wheelEvent(event)
+
+    def leaveEvent(self, event: QtCore.QEvent) -> None:
+        self.is_mouse_over = False
+        if self.auto_hide:
+            self.timer.start(2000)
+
+    def hide_and_scroll_bottom(self):
+        if not self.is_mouse_over:
+            self.verticalScrollBar().hide()
             self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
 
 

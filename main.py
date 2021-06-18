@@ -3,8 +3,8 @@ from panel.MainWindow import UiMainWindow
 from panel.SettingWindow import UiSettingWindow
 from panel.BarrageWindow import UiBarrageWindow
 from panel.SystemTray import UiSystemTray
-from components.ChangeableMainWindow import ChangeableMainWindow
-from components.ChangeableWidget import ChangeableWidget
+from components.Changeable import ChangeableMainWindow
+from components.Changeable import ChangeableWidget
 import sys
 from PyQt5.QtWidgets import QApplication, QDialog, QWidget
 from PyQt5.QtCore import QByteArray
@@ -35,14 +35,16 @@ if __name__ == '__main__':
     ui_barrage = UiBarrageWindow()
     ui_barrage.setupUi(barrage_window)
     ui_main._signal_toggle_barrage_window.connect(ui_barrage._toggle)
-    ui_main._signal_bili_ws_receive.connect(ui_barrage.add_barrage)
-    ui_main._signal_bili_ws_join.connect(ui_barrage.add_join)
-    ui_main._signal_bili_ws_gift.connect(ui_barrage.add_gift)
+    ui_main._signal_bili_ws_receive.connect(ui_barrage.handle_message)
     ui_main._signal_bili_ws_update.connect(ui_barrage.update_live_info)
     ui_main._signal_bili_ws_pop.connect(ui_barrage.update_heartbeat)
     ui_main._signal_bili_ws_close.connect(ui_barrage.ws_closed)
-    ui_main._signal_bili_ws_live.connect(ui_barrage.live_start)
-    ui_main._signal_bili_ws_preparing.connect(ui_barrage.live_stop)
+    ui_barrage._signal_live_status_change.connect(ui_main.call_bili_ws_live_status_change)
+    ui_barrage._signal_live_info_changed.connect(ui_main.call_bili_ws_live_info_change)
+    # ui_main._signal_bili_ws_join.connect(ui_barrage.add_join)
+    # ui_main._signal_bili_ws_gift.connect(ui_barrage.add_gift)
+    # ui_main._signal_bili_ws_live.connect(ui_barrage.live_start)
+    # ui_main._signal_bili_ws_preparing.connect(ui_barrage.live_stop)
 
     """ system tray """
     pixMap = QPixmap()
